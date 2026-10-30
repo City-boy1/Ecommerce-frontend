@@ -1,0 +1,129 @@
+/* Home page. All classes are prefixed home-*. Uses tokens from tokens.css. */
+
+.home-page { background: var(--inv-white); color: var(--inv-black); font-family: var(--lm-font); overflow-x: clip; }
+.home-page * { box-sizing: border-box; }
+
+/* Straight edges: also flattens the shared ProductCard (it reads these tokens) */
+.home-page { --lm-radius: 0px; --lm-radius-sm: 0px; }
+.home-page .lm-badge, .home-page .lm-heart { border-radius: 0; }
+.home-page img { display: block; max-width: 100%; }
+
+.home-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.home-eyebrow { display: inline-block; font-size: 11.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--inv-bronze); }
+
+/* Buttons and links */
+.home-button { display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px; border-radius: 0; font-size: 14.5px; font-weight: 600; text-decoration: none; border: 1px solid transparent; transition: transform .15s, background .15s, color .15s; }
+.home-button:hover { transform: translateY(-1px); }
+.home-button-dark { background: var(--inv-black); color: #fff; }
+.home-button-dark:hover { background: #2a2a2a; }
+.home-button-outline { border-color: var(--inv-black); color: var(--inv-black); background: transparent; }
+.home-button-outline:hover { background: var(--inv-black); color: #fff; }
+.home-text-link { color: var(--inv-black); font-size: 14.5px; font-weight: 600; text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 2px; }
+.home-text-link:hover { color: var(--inv-bronze); }
+.home-underlined-link { color: var(--inv-black); font-size: 14px; font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--inv-black); padding-bottom: 2px; white-space: nowrap; }
+.home-underlined-link:hover { color: var(--inv-bronze); border-color: var(--inv-bronze); }
+
+/* HERO */
+.home-hero { max-width: 1320px; margin: 0 auto; padding: 56px 24px 40px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 56px; align-items: center; }
+.home-hero-content h1 { margin: 18px 0 20px; font-size: clamp(38px, 5.4vw, 68px); line-height: 1.04; font-weight: 500; letter-spacing: -.03em; }
+.home-hero-content h1 em { font-style: italic; font-weight: 400; color: var(--inv-bronze); }
+.home-hero-content > p { margin: 0 0 30px; max-width: 460px; font-size: 17px; line-height: 1.65; color: #555; }
+.home-hero-actions { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+.home-hero-note { margin-top: 44px; display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--inv-muted); }
+.home-note-line { width: 36px; height: 1px; background: var(--inv-bronze); }
+
+.home-hero-visual { position: relative; border-radius: 0; overflow: hidden; aspect-ratio: 4 / 4.6; background: var(--inv-bronze-soft); }
+.home-hero-image { width: 100%; height: 100%; object-fit: cover; }
+.home-hero-visual::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(17,17,17,.45)); pointer-events: none; }
+.home-hero-caption { position: absolute; left: 22px; right: 22px; bottom: 18px; z-index: 1; display: flex; justify-content: space-between; gap: 12px; color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .14em; }
+
+/* BENEFITS */
+.home-benefits { max-width: 1320px; margin: 0 auto; padding: 0 24px; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--inv-border); border-bottom: 1px solid var(--inv-border); }
+.home-benefit { display: flex; align-items: center; gap: 14px; padding: 24px 20px; }
+.home-benefit + .home-benefit { border-left: 1px solid var(--inv-border); }
+.home-benefit-icon { width: 44px; height: 44px; flex: none; border-radius: 0; background: var(--inv-bronze-soft); color: var(--inv-bronze); display: grid; place-items: center; }
+.home-benefit strong { display: block; font-size: 14.5px; font-weight: 600; }
+.home-benefit span:not(.home-benefit-icon) { font-size: 13px; color: var(--inv-muted); }
+
+/* SECTIONS */
+.home-section { max-width: 1320px; margin: 0 auto; padding: 72px 24px 0; }
+.home-section-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
+.home-section-heading h2 { margin: 8px 0 0; font-size: clamp(28px, 3.4vw, 40px); font-weight: 500; letter-spacing: -.025em; line-height: 1.1; }
+.home-section-heading h2 span { color: var(--inv-bronze); }
+.home-section-description { margin: 10px 0 0; font-size: 15px; color: var(--inv-muted); }
+
+/* CATEGORIES */
+.home-category-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.home-category-card { position: relative; display: block; aspect-ratio: 4 / 5; border-radius: 0; overflow: hidden; background: var(--inv-bronze-soft); color: #fff; text-decoration: none; isolation: isolate; }
+.home-category-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .6s ease; z-index: -2; }
+.home-category-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(17,17,17,0) 40%, rgba(17,17,17,.68)); z-index: -1; }
+.home-category-card:hover img { transform: scale(1.05); }
+.home-category-number { position: absolute; top: 16px; left: 18px; font-size: 12px; font-weight: 600; letter-spacing: .12em; }
+.home-category-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 20px; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.home-category-overlay h3 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -.01em; }
+.home-category-overlay p { margin: 6px 0 0; font-size: 13px; opacity: .85; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.home-category-arrow { width: 36px; height: 36px; flex: none; border-radius: 0; background: rgba(255,255,255,.92); color: var(--inv-black); display: grid; place-items: center; transition: transform .2s, background .2s; }
+.home-category-card:hover .home-category-arrow { transform: rotate(45deg); background: #fff; }
+/* Fallback when a category has no image or it fails to load */
+.home-category-card.is-plain { background: #f1e9dc; color: #5c4730; }
+.home-category-card.is-plain::after { display: none; }
+.home-category-card.is-plain .home-category-arrow { background: #fff; }
+
+/* Product rows reuse .lm-grid / ProductCard from shop.css */
+.home-section .lm-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* EDITORIAL (seller call to action) */
+.home-editorial { max-width: 1320px; margin: 80px auto 0; padding: 0 24px; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; }
+.home-editorial-image { border-radius: 0; overflow: hidden; min-height: 380px; }
+.home-editorial-image img { width: 100%; height: 100%; object-fit: cover; }
+.home-editorial-content { background: var(--inv-bronze-soft); border-radius: 0; padding: 56px 52px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 18px; }
+.home-editorial-content h2 { margin: 0; font-size: clamp(28px, 3.4vw, 42px); font-weight: 500; letter-spacing: -.025em; line-height: 1.1; }
+.home-editorial-content h2 em { font-style: italic; font-weight: 400; color: var(--inv-bronze); }
+.home-editorial-content p { margin: 0 0 6px; max-width: 440px; font-size: 16px; line-height: 1.65; color: #555; }
+
+/* NEWSLETTER */
+.home-newsletter { max-width: 1320px; margin: 80px auto 0; padding: 48px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; border-top: 1px solid var(--inv-border); }
+.home-newsletter-copy h2 { margin: 10px 0 8px; font-size: clamp(26px, 3vw, 34px); font-weight: 500; letter-spacing: -.02em; }
+.home-newsletter-copy p { margin: 0; color: var(--inv-muted); font-size: 15px; }
+.home-newsletter-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.home-newsletter-form input { min-width: 0; padding: 14px 18px; border: 1px solid var(--inv-border); border-radius: 0; font: inherit; font-size: 14.5px; background: #fff; }
+.home-newsletter-form input:focus { outline: 2px solid var(--inv-bronze); outline-offset: 1px; border-color: transparent; }
+.home-newsletter-form button { padding: 14px 24px; border: 0; border-radius: 0; background: var(--inv-black); color: #fff; font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+.home-newsletter-form button:hover { background: #2a2a2a; }
+.home-newsletter-form > p { grid-column: 1 / -1; margin: 2px 6px 0; font-size: 12px; color: var(--inv-muted); }
+
+/* TABLET */
+@media (max-width: 1000px) {
+  .home-hero { grid-template-columns: 1fr; gap: 36px; padding-top: 36px; }
+  .home-hero-visual { aspect-ratio: 16 / 11; }
+  .home-category-grid, .home-section .lm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-editorial { grid-template-columns: 1fr; }
+  .home-editorial-image { border-radius: 0; min-height: 240px; }
+  .home-editorial-content { border-radius: 0; padding: 36px 28px; }
+  .home-newsletter { grid-template-columns: 1fr; gap: 24px; }
+}
+
+/* PHONE */
+@media (max-width: 640px) {
+  .home-hero { padding: 24px 16px 28px; }
+  .home-hero-visual { aspect-ratio: 4 / 3; }
+  .home-hero-content > p { font-size: 15.5px; }
+  .home-benefits { grid-template-columns: 1fr; padding: 0 16px; }
+  .home-benefit + .home-benefit { border-left: 0; border-top: 1px solid var(--inv-border); }
+  .home-benefit { padding: 16px 4px; }
+  .home-section, .home-editorial, .home-newsletter { padding-left: 16px; padding-right: 16px; }
+  .home-section { padding-top: 52px; }
+  .home-category-grid, .home-section .lm-grid { gap: 12px; }
+  .home-category-overlay { padding: 14px; }
+  .home-category-overlay h3 { font-size: 16px; }
+  .home-category-overlay p { display: none; }
+  .home-category-arrow { width: 30px; height: 30px; }
+  .home-editorial { margin-top: 56px; }
+  .home-newsletter-form { grid-template-columns: 1fr; }
+  .home-newsletter-form button { justify-self: stretch; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-category-card img, .home-button, .home-category-arrow { transition: none; }
+}

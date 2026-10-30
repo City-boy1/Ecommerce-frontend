@@ -1,0 +1,77 @@
+/* Extras for Navbar.jsx: categories dropdown, count badges, notifications bell.
+   Import AFTER Navbar.css. The resets use :where() (zero specificity) so any
+   rule in Navbar.css still wins over them. */
+
+:where(.nav-cat-trigger, .nav-cat-mobile-trigger) {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Desktop categories dropdown */
+.nav-cat { position: relative; display: inline-flex; align-items: center; }
+.nav-cat-trigger { display: inline-flex; align-items: center; gap: 4px; }
+.nav-cat-trigger svg { transition: transform .15s; }
+.nav-cat-trigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+.nav-cat-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: -12px;
+  min-width: 220px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(17, 17, 17, .12);
+  z-index: 80;
+}
+.nav-cat-menu a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #3d3d3d;
+  font-size: 14px;
+  text-decoration: none;
+}
+.nav-cat-menu a:hover,
+.nav-cat-menu a:focus-visible { background: #f3f3f3; color: #111; outline: none; }
+.nav-cat-menu a.is-current { background: #f1e9dc; color: #5c4730; font-weight: 600; }
+.nav-cat-empty { padding: 10px 12px; font-size: 13px; color: #737373; }
+
+/* Count badges on the heart and bell reuse .cart-count from Navbar.css */
+.nav-badge-host { position: relative; }
+
+/* Mobile menu */
+.nav-cat-mobile-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+.nav-cat-sub { padding-left: 24px; }
+.nav-mobile-count {
+  margin-left: 8px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #947653;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+  vertical-align: middle;
+}
+
+/* On very narrow phones the bell moves into the mobile menu to save room */
+@media (max-width: 400px) {
+  .nav-bell { display: none; }
+}

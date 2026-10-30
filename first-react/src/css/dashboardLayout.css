@@ -1,0 +1,127 @@
+/* Responsive layer for the dashboard. Import AFTER dashboardLayout.css.
+   Desktop look is untouched; everything here is mobile/tablet behaviour. */
+
+.lumora-mobilebar,
+.lumora-overlay,
+.lumora-sidebar-close { display: none; }
+
+.lumora-nav-badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--inv-black, #111);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+}
+
+.lumora-dashboard-content { min-width: 0; }
+.lumora-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.lumora-dashboard-content img { max-width: 100%; }
+
+@media (max-width: 900px) {
+  .lumora-dashboard { display: block !important; min-height: 100vh; }
+
+  .lumora-mobilebar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: var(--lm-nav-h, 0px);
+    z-index: 40;
+    padding: 10px 14px;
+    background: var(--inv-white, #fff);
+    border-bottom: 1px solid var(--inv-border, #e5e5e5);
+  }
+  .lumora-mobilebar__btn {
+    width: 40px; height: 40px; border-radius: 10px;
+    border: 1px solid var(--inv-border, #e5e5e5);
+    background: var(--inv-white, #fff); color: var(--inv-black, #111);
+    display: grid; place-items: center; cursor: pointer; position: relative;
+  }
+  .lumora-mobilebar__title { font-size: 12px; letter-spacing: .08em; font-weight: 600; color: var(--inv-muted, #737373); }
+  .lumora-mobilebar__spacer { flex: 1; }
+  .lumora-mobilebar__dot {
+    position: absolute; top: 6px; right: 6px; min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: 999px; background: var(--inv-danger, #b42318); color: #fff;
+    font-size: 10px; font-weight: 700; display: grid; place-items: center;
+  }
+
+  .lumora-sidebar {
+    position: fixed !important;
+    top: 0; left: 0; bottom: 0;
+    width: min(84vw, 300px) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    background-color: #fff;
+    overflow-y: auto;
+    transform: translateX(-104%);
+    visibility: hidden;
+    transition: transform .25s ease, visibility 0s linear .25s;
+    z-index: 1000;
+    box-shadow: 0 0 40px rgba(17, 17, 17, .18);
+  }
+  .lumora-sidebar.is-open { transform: none; visibility: visible; transition: transform .25s ease, visibility 0s; }
+
+  /* Drawer contents stack vertically. This overrides the old small-screen
+     rule that laid the links out as a horizontal scrolling strip. */
+  .lumora-sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    padding-top: 56px !important;
+  }
+  .lumora-side-nav {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
+    width: 100% !important;
+    gap: 4px;
+  }
+  .lumora-side-link {
+    width: 100% !important;
+    flex: none !important;
+    white-space: normal;
+  }
+  .lumora-sidebar-bottom {
+    position: static !important;
+    width: 100% !important;
+    margin-top: auto;
+  }
+  .lumora-workspace-label { white-space: normal; }
+
+  .lumora-sidebar-close {
+    display: grid; place-items: center;
+    position: absolute; top: 10px; right: 10px;
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--inv-border, #e5e5e5);
+    background: #fff; cursor: pointer;
+  }
+
+  .lumora-overlay.is-open {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(17, 17, 17, .45);
+    z-index: 999;
+  }
+
+  .lumora-dashboard-main { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; }
+  .lumora-dashboard-content { padding: 16px !important; }
+}
+
+@media (min-width: 901px) {
+  .lumora-overlay.is-open { display: none; }
+}
+
+@media (max-width: 480px) {
+  .lumora-dashboard-content { padding: 12px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lumora-sidebar { transition: none; }
+}

@@ -1,0 +1,109 @@
+/* Admin oversight: Sellers, Disputes, suspended banner, buyer confirm.
+   Prefix lm-ao-. Colours match tokens.css (README Part 1 §4.3). */
+
+:root {
+  --ao-border: #e5e5e5;
+  --ao-muted: #737373;
+  --ao-bronze: #947653;
+  --ao-bronze-soft: #f8f6f3;
+  --ao-ok: #27734a;
+  --ao-ok-bg: #edf7f0;
+  --ao-warn: #96651d;
+  --ao-warn-bg: #fbf4e7;
+  --ao-danger: #b42318;
+  --ao-danger-bg: #fef0ef;
+}
+
+/* ---------- toolbar, table ---------- */
+.lm-ao-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.lm-ao-search { width: 100%; max-width: 300px; }
+
+.lm-ao-tablewrap { overflow-x: auto; background: #fff; border: 1px solid var(--ao-border); border-radius: 12px; }
+.lm-ao-table { width: 100%; min-width: 960px; border-collapse: collapse; font-size: 14px; }
+.lm-ao-table th {
+  text-align: left; white-space: nowrap; padding: 12px 14px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--ao-muted); background: #fafafa; border-bottom: 1px solid var(--ao-border);
+}
+.lm-ao-table td { padding: 12px 14px; border-bottom: 1px solid var(--ao-border); vertical-align: middle; }
+.lm-ao-table tr:last-child td { border-bottom: 0; }
+.lm-ao-table td.is-warn { background: var(--ao-warn-bg); color: var(--ao-warn); font-weight: 600; }
+.lm-ao-table td.is-danger { background: var(--ao-danger-bg); color: var(--ao-danger); font-weight: 600; }
+.lm-ao-table tr.is-suspended td:first-child { box-shadow: inset 3px 0 0 var(--ao-danger); }
+
+.lm-ao-store { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+.lm-ao-logo {
+  width: 36px; height: 36px; flex: none; border-radius: 8px; object-fit: cover;
+  background: #f0f0f0; display: grid; place-items: center; font-weight: 600; color: var(--ao-muted);
+}
+.lm-ao-store strong { display: block; font-weight: 600; }
+.lm-ao-sub { display: block; font-size: 12px; color: var(--ao-muted); }
+.lm-ao-actions { display: flex; justify-content: flex-end; gap: 8px; white-space: nowrap; }
+
+.lm-ao-pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; font-size: 14px; color: var(--ao-muted); }
+
+/* ---------- badges, small buttons ---------- */
+.lm-ao-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+  font-size: 12px; font-weight: 600; background: #f0f0f0; color: #404040;
+}
+.lm-ao-badge--active, .lm-ao-badge--resolved_refund { background: var(--ao-ok-bg); color: var(--ao-ok); }
+.lm-ao-badge--suspended { background: var(--ao-danger-bg); color: var(--ao-danger); }
+.lm-ao-badge--open { background: var(--ao-warn-bg); color: var(--ao-warn); }
+
+.lm-ao-btn-danger { color: var(--ao-danger) !important; border-color: var(--ao-danger) !important; }
+
+/* ---------- modals ---------- */
+.lm-modal.lm-ao-modal--wide { width: calc(100% - 32px); max-width: 680px; max-height: 85vh; overflow-y: auto; }
+.lm-ao-orderrow {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-top: 1px solid var(--ao-border);
+}
+.lm-ao-orderrow:first-of-type { border-top: 0; }
+.lm-ao-orderrow p { margin: 2px 0 0; font-size: 13px; color: var(--ao-muted); }
+
+.lm-ao-radio {
+  display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; margin-bottom: 8px;
+  border: 1px solid var(--ao-border); border-radius: 10px; cursor: pointer;
+}
+.lm-ao-radio:has(input:checked) { border-color: var(--ao-bronze); background: var(--ao-bronze-soft); }
+.lm-ao-radio strong { display: block; font-size: 14px; }
+.lm-ao-radio span { font-size: 13px; color: var(--ao-muted); }
+
+/* ---------- disputes ---------- */
+.lm-ao-dlist { display: grid; gap: 14px; }
+.lm-ao-dcard { background: #fff; border: 1px solid var(--ao-border); border-radius: 12px; padding: 16px; }
+.lm-ao-dhead { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.lm-ao-dhead h3 { margin: 0; font-size: 16px; }
+.lm-ao-dbadges { display: flex; gap: 8px; flex-wrap: wrap; }
+.lm-ao-dmeta { margin: 6px 0 0; font-size: 13px; color: var(--ao-muted); }
+.lm-ao-quote { margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid var(--ao-bronze); background: var(--ao-bronze-soft); border-radius: 0 8px 8px 0; font-size: 14px; white-space: pre-wrap; }
+.lm-ao-imgs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.lm-ao-imgs img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--ao-border); }
+.lm-ao-note { margin: 12px 0 0; font-size: 13px; color: #404040; }
+.lm-ao-dfoot { margin-top: 12px; display: flex; justify-content: flex-end; }
+
+/* ---------- suspended banner (seller) ---------- */
+.lm-ao-banner {
+  margin-bottom: 12px; padding: 14px 16px; border-radius: 12px;
+  background: var(--ao-danger-bg); border: 1px solid var(--ao-danger); color: #7a1a12;
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+}
+.lm-ao-banner strong { display: block; color: var(--ao-danger); }
+.lm-ao-banner p { margin: 2px 0 0; font-size: 14px; }
+
+/* ---------- buyer confirm strip ---------- */
+.lm-ao-confirm {
+  margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--ao-bronze-soft);
+  display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; font-size: 14px;
+}
+.lm-ao-confirm small { display: block; color: var(--ao-muted); font-size: 12px; }
+.lm-ao-confirm--ok { background: var(--ao-ok-bg); color: var(--ao-ok); }
+.lm-ao-confirm--open { background: var(--ao-warn-bg); color: var(--ao-warn); }
+.lm-ao-confirm__btns { display: flex; gap: 8px; }
+
+/* ---------- seller reply (seller dialog + admin card) ---------- */
+.lm-ao-badgerow { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lm-ao-linkbtn { background: none; border: 0; padding: 0; font: inherit; font-size: 13px; color: var(--ao-bronze); text-decoration: underline; cursor: pointer; }
+.lm-ao-quote--seller { border-left-color: #111; background: #f5f5f5; }
+.lm-ao-quotelabel { display: block; margin-top: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ao-muted); }
