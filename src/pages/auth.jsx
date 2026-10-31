@@ -185,7 +185,7 @@ export default function Auth() {
                       minLength: isSignup
                         ? {
                             value: 8,
-                            message: "Password must be at least 6 characters.",
+                            message: "Password must be at least 8 characters.",
                           }
                         : undefined,
                     })}
@@ -213,9 +213,7 @@ export default function Auth() {
                   <span className="auth-secure-note">
                     <span aria-hidden="true">🔒</span> Your account is secure
                   </span>
-
-                  {/* Connect this link when your forgot-password page is ready. */}
-                  <Link to="/auth/forgot-password" className="auth-inline-link">
+                  <Link to="/forgot-password" className="auth-inline-link">
                     Forgot password?
                   </Link>
                 </div>

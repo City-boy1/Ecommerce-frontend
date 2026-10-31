@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useFetch } from "../../hooks/useFetch";
 import { useNotify } from "../../hooks/useNotify";
-import { getMyOrders, cancelSubOrder } from "../../services/dashboardService";
-import { PageHeader, Tabs, StatusBadge, OrderTimeline, EmptyState, RowSkeleton, ErrorState, ConfirmDialog } from "../../components/dashboard/ui";
-import { deriveOrderStatus, isLiveOrder, canCancel } from "../../utils/orderStatus";
+import { getMyOrders } from "../../services/dashboardService";
+import { cancelOrder } from "../../services/orderActions";
+import { PageHeader, Tabs, StatusBadge, OrderTimeline, EmptyState, RowSkeleton, ErrorState } from "../../components/dashboard/ui";
+import CancelDialog from "../../components/dashboard/CancelDialog";
+import { BUYER_REASONS } from "../../utils/cancelReasons";
+import { deriveOrderStatus, isLiveOrder } from "../../utils/orderStatus";
 import { formatDate } from "../../utils/dateHelpers";
 import { formatPrice, getImageUrl } from "../../utils/productHelpers";
 import DeliveryConfirm from "../../components/dashboard/DeliveryConfirm";
@@ -21,30 +24,34 @@ const TAB_MATCH = {
 
 export default function MyOrders() {
   const notify = useNotify();
-  const { data, setData, loading, error, reload } = useFetch(getMyOrders, [], { interval: 45000 });
+  const { data, loading, error, reload } = useFetch(getMyOrders, [], { interval: 45000 });
   const [tab, setTab] = useState("all");
   const [toggled, setToggled] = useState({});
   const [target, setTarget] = useState(null); // { order, sub }
   const [busy, setBusy] = useState(false);
 
+  // Notification links open this page with ?order=<id>
   const [params] = useSearchParams();
-const focusId = params.get("order");
-const [highlight, setHighlight] = useState("");
-const handled = useRef("");
+  const focusId = params.get("order");
+  const [highlight, setHighlight] = useState("");
+  const handled = useRef("");
 
-useEffect(() => {
-  if (!focusId || !data || handled.current === focusId) return;
-  if (!data.some((o) => o._id === focusId)) return;
-  handled.current = focusId;
-  setTab("all");
-  setToggled((t) => ({ ...t, [focusId]: true }));
-  setHighlight(focusId);
-  const scroll = setTimeout(() => {
-    document.getElementById(`order-${focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, 150);
-  const fade = setTimeout(() => setHighlight(""), 4000);
-  return () => { clearTimeout(scroll); clearTimeout(fade); };
-}, [focusId, data]);
+  useEffect(() => {
+    if (!focusId || !data || handled.current === focusId) return;
+    if (!data.some((o) => o._id === focusId)) return;
+    handled.current = focusId;
+    setTab("all");
+    setToggled((t) => ({ ...t, [focusId]: true }));
+    setHighlight(focusId);
+    const scroll = setTimeout(() => {
+      document.getElementById(`order-${focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+    const fade = setTimeout(() => setHighlight(""), 4000);
+    return () => {
+      clearTimeout(scroll);
+      clearTimeout(fade);
+    };
+  }, [focusId, data]);
 
   const orders = useMemo(
     () => (data || []).map((o) => ({ ...o, derived: deriveOrderStatus(o.subOrders) })),
@@ -57,31 +64,28 @@ useEffect(() => {
   );
   const shown = orders.filter((o) => TAB_MATCH[tab](o.derived));
 
-  const confirmCancel = async (reason) => {
+  // placed    -> cancelled straight away
+  // confirmed -> a request is sent to the seller (the server decides which)
+  const confirmCancel = async ({ reasonCode, note }) => {
     const { order, sub } = target;
-    const prev = data;
     setBusy(true);
-    // optimistic: show it cancelled straight away
-    setData(prev.map((o) => (o._id !== order._id ? o : {
-      ...o,
-      subOrders: o.subOrders.map((s) => (s._id !== sub._id ? s : {
-        ...s,
-        status: "cancelled",
-        timeline: [...(s.timeline || []), { status: "cancelled", at: new Date().toISOString(), note: reason }],
-      })),
-    })));
     try {
-      await cancelSubOrder(order._id, sub._id, reason);
-      notify.success("Order cancelled. Your items go back into stock.");
+      const res = await cancelOrder(order._id, sub._id, { reasonCode, note });
+      notify.success(
+        res.requested
+          ? "Request sent. The seller has 24 hours to answer, or it is approved automatically."
+          : "Order cancelled. Your items go back into stock."
+      );
       setTarget(null);
       reload();
     } catch (e) {
-      setData(prev);
       notify.error(e?.response?.data?.message || "We couldn't cancel this order. It may already be on its way.");
     } finally {
       setBusy(false);
     }
   };
+
+  const isRequest = target?.sub?.status === "confirmed";
 
   return (
     <div className="lm-d">
@@ -123,6 +127,7 @@ useEffect(() => {
                 <div className="lm-order__right">
                   <strong>{formatPrice(o.grandTotal)}</strong>
                   <StatusBadge status={o.derived} />
+                  <Link className="lm-linkbtn" to={`/orders/${o._id}`}>Full details</Link>
                   <button className="lm-linkbtn" onClick={() => setToggled((t) => ({ ...t, [o._id]: !open }))} aria-expanded={open}>
                     {open ? "Hide details" : "Show details"}
                   </button>
@@ -146,8 +151,19 @@ useEffect(() => {
                     ))}
                   </div>
                   <div className="lm-sub__actions">
-                    {canCancel(so.status) && (
+                    {so.status === "placed" && (
                       <button className="lm-btn lm-btn--ghost lm-btn--sm" onClick={() => setTarget({ order: o, sub: so })}>Cancel this order</button>
+                    )}
+                    {so.status === "confirmed" && !so.cancelRequest && (
+                      <button className="lm-btn lm-btn--ghost lm-btn--sm" onClick={() => setTarget({ order: o, sub: so })}>Request cancellation</button>
+                    )}
+                    {so.status === "confirmed" && so.cancelRequest?.status === "pending" && (
+                      <span className="lm-order__meta">
+                        Cancellation requested. The seller has until {formatDate(so.cancelRequest.autoApproveAt)} to answer.
+                      </span>
+                    )}
+                    {so.status === "confirmed" && so.cancelRequest?.status === "refused" && (
+                      <span className="lm-order__meta">The seller refused your request: {so.cancelRequest.respondNote}</span>
                     )}
                     {so.status === "delivered" && (so.items || []).map((it) => (
                       <Link key={it.product} to={`/products/${it.product}#reviews`} className="lm-btn lm-btn--ghost lm-btn--sm">
@@ -164,14 +180,16 @@ useEffect(() => {
         })}
       </div>
 
-      <ConfirmDialog
+      <CancelDialog
         open={!!target}
-        title="Cancel this order?"
-        message={`This cancels the items from ${target?.sub?.store?.name || "this seller"} only. You can't undo it.`}
-        confirmLabel="Yes, cancel it"
-        cancelLabel="Keep order"
-        danger
-        askReason
+        title={isRequest ? "Request cancellation?" : "Cancel this order?"}
+        message={
+          isRequest
+            ? `${target?.sub?.store?.name || "The seller"} has already confirmed this order, so they have 24 hours to answer. If they don't, it is cancelled automatically.`
+            : `This cancels the items from ${target?.sub?.store?.name || "this seller"} only. You can't undo it.`
+        }
+        reasons={BUYER_REASONS}
+        confirmLabel={isRequest ? "Send request" : "Yes, cancel it"}
         busy={busy}
         onConfirm={confirmCancel}
         onClose={() => !busy && setTarget(null)}

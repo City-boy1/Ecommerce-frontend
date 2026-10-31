@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { axiosPrivate } from "../../api/axios";
 import { useToast } from "../../context/ToastContext";
-import { getImageUrl } from "../../utils/productHelpers";
-import { formatPrice } from "../../utils/format";
+import { getImageUrl, formatPrice } from "../../utils/productHelpers";
 import "../../css/inventory.css";
 
 const emptyVariant = () => ({ color: "", size: "", price: "", stock: "" });
@@ -313,6 +312,8 @@ export default function Inventory() {
       } else {
         await axiosPrivate.post("/products", payload);
         notify("success", "Product submitted and is awaiting approval.");
+        // lets the store-setup banner come back if the store isn't finished yet
+        window.dispatchEvent(new Event("lumora:product-added"));
       }
       setSaving(false);
       closeForm();
@@ -661,9 +662,9 @@ export default function Inventory() {
                             <input id={`variant-size-${index}`} value={variant.size} onChange={(e) => updateVariant(index, "size", e.target.value)} placeholder="e.g. Medium" required />
                           </div>
                           <div className="inventory-field">
-                            <label htmlFor={`variant-price-${index}`}>Price (USD) <em>*</em></label>
+                            <label htmlFor={`variant-price-${index}`}>Price (GH₵) <em>*</em></label>
                             <div className="inventory-price-input">
-                              <span>$</span>
+                              <span>₵</span>
                               <input id={`variant-price-${index}`} type="number" min="0" step="0.01" value={variant.price} onChange={(e) => updateVariant(index, "price", e.target.value)} placeholder="0.00" required />
                             </div>
                           </div>

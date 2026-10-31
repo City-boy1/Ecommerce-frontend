@@ -4,7 +4,7 @@ import { useNotifications } from "../../context/notificationContext";
 import { MyStoreProvider, useMyStore } from "../../context/myStoreContext";
 import StoreSetupBanner from "../../components/dashboard/StoreSetupBanner";
 import SuspendedBanner from "../../components/dashboard/SuspendedBanner";
-import Icon from "../../components/icons";
+import Icon from "../../components/Icons";
 import { BellIcon } from "../../components/dashboard/navIcons";
 import "../../css/tokens.css";
 import "../../css/dashboardLayout.css"; // kept only for rules your other pages may share
@@ -22,6 +22,8 @@ const NAV_ITEMS = [
   { to: "/dashboard/categories", label: "Categories", icon: "inventory", roles: ["admin"] },
   { to: "/dashboard/sellers", label: "Sellers", icon: "inventory", roles: ["admin"] },
   { to: "/dashboard/disputes", label: "Disputes", icon: "orders", roles: ["admin"] },
+  { to: "/dashboard/audit", label: "Audit", icon: "inventory", roles: ["admin"] },
+  { to: "/dashboard/deletions", label: "Account deletions", icon: "orders", roles: ["admin"] },
   { to: "/dashboard/orders", label: "My orders", sellerLabel: "My purchases", icon: "orders", roles: ["buyer", "seller"] },
   { to: "/dashboard/notifications", label: "Notifications", bell: true, roles: ALL, badge: true },
   { to: "/dashboard/profile", label: "My Profile", icon: "orders", roles: ALL },

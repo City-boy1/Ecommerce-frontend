@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNotify } from "../../hooks/useNotify";
 import { replyToDispute } from "../../services/disputeService";
 import { REASON_LABEL } from "../../utils/disputeLabels";
+import { getImageUrl } from "../../utils/productHelpers";
 import apiMessage from "../../utils/apiMessage";
 import "../../css/adminOversight.css";
 
-function ReplyDialog({ dispute, onClose, onDone }) {
+// Opens in two modes: reply (seller hasn't answered yet) or read-only (already replied).
+function ReportDialog({ dispute, readOnly, onClose, onDone }) {
   const notify = useNotify();
   const [message, setMessage] = useState("");
   const [err, setErr] = useState("");
@@ -15,9 +17,9 @@ function ReplyDialog({ dispute, onClose, onDone }) {
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && !busy && onClose();
     document.addEventListener("keydown", onKey);
-    setTimeout(() => boxRef.current?.querySelector("textarea")?.focus(), 0);
+    if (!readOnly) setTimeout(() => boxRef.current?.querySelector("textarea")?.focus(), 0);
     return () => document.removeEventListener("keydown", onKey);
-  }, [busy, onClose]);
+  }, [busy, onClose, readOnly]);
 
   const submit = async () => {
     if (message.trim().length < 10) return setErr("Please write at least 10 characters.");
@@ -34,26 +36,53 @@ function ReplyDialog({ dispute, onClose, onDone }) {
     }
   };
 
+  const images = dispute.images || [];
+
   return (
     <div className="lm-modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
       <div className="lm-modal" role="dialog" aria-modal="true" aria-labelledby="lm-sr-title" ref={boxRef}>
-        <h2 id="lm-sr-title">Respond to this report</h2>
+        <h2 id="lm-sr-title">{readOnly ? "Buyer's report" : "Respond to this report"}</h2>
         <p>
           <strong>{REASON_LABEL[dispute.reason] || "Problem reported"}.</strong>
         </p>
         {dispute.message && <blockquote className="lm-ao-quote">{dispute.message}</blockquote>}
-        <p>You can reply once. Tell us your side, for example proof of delivery. Our team reads it before deciding.</p>
 
-        <div className="lm-d-field">
-          <label htmlFor="lm-sr-msg">Your reply</label>
-          <textarea id="lm-sr-msg" className="lm-input" rows={4} maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} />
-        </div>
-        {err && <div className="lm-err" role="alert">{err}</div>}
+        {images.length > 0 && (
+          <div className="lm-ao-photos" aria-label="Photos from the buyer">
+            {images.map((p, i) => (
+              <a key={p} className="lm-ao-photo" href={getImageUrl(p)} target="_blank" rel="noreferrer noopener" title="Open full size">
+                <img src={getImageUrl(p)} alt={`Buyer photo ${i + 1}`} />
+              </a>
+            ))}
+          </div>
+        )}
 
-        <div className="lm-modal__actions">
-          <button className="lm-btn lm-btn--ghost" onClick={onClose} disabled={busy}>Cancel</button>
-          <button className="lm-btn" onClick={submit} disabled={busy}>{busy ? "Sending…" : "Send reply"}</button>
-        </div>
+        {readOnly ? (
+          <>
+            {dispute.sellerReply?.message && (
+              <>
+                <p><strong>Your reply</strong></p>
+                <blockquote className="lm-ao-quote">{dispute.sellerReply.message}</blockquote>
+              </>
+            )}
+            <div className="lm-modal__actions">
+              <button className="lm-btn" onClick={onClose}>Close</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p>You can reply once. Tell us your side, for example proof of delivery. Our team reads it before deciding.</p>
+            <div className="lm-d-field">
+              <label htmlFor="lm-sr-msg">Your reply</label>
+              <textarea id="lm-sr-msg" className="lm-input" rows={4} maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} />
+            </div>
+            {err && <div className="lm-err" role="alert">{err}</div>}
+            <div className="lm-modal__actions">
+              <button className="lm-btn lm-btn--ghost" onClick={onClose} disabled={busy}>Cancel</button>
+              <button className="lm-btn" onClick={submit} disabled={busy}>{busy ? "Sending…" : "Send reply"}</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -63,7 +92,7 @@ function ReplyDialog({ dispute, onClose, onDone }) {
 //   <DisputeBadge dispute={o.dispute} onChanged={reload} />
 // Renders nothing unless a dispute is open.
 export default function DisputeBadge({ dispute, onChanged }) {
-  const [replying, setReplying] = useState(false);
+  const [dialog, setDialog] = useState(null); // null | "reply" | "view"
   if (!dispute || dispute.status !== "open") return null;
 
   const replied = !!dispute.sellerReply;
@@ -71,20 +100,24 @@ export default function DisputeBadge({ dispute, onChanged }) {
     <>
       <span className="lm-ao-badgerow">
         <span className="lm-ao-badge lm-ao-badge--open" title="The buyer reported a problem. An admin is reviewing it.">Dispute open</span>
-        {replied ? (
-          <small>You replied</small>
-        ) : (
-          dispute._id && (
-            <button type="button" className="lm-ao-linkbtn" onClick={() => setReplying(true)}>Respond</button>
+        {dispute._id && (
+          replied ? (
+            <>
+              <small>You replied</small>
+              <button type="button" className="lm-ao-linkbtn" onClick={() => setDialog("view")}>View report</button>
+            </>
+          ) : (
+            <button type="button" className="lm-ao-linkbtn" onClick={() => setDialog("reply")}>Respond</button>
           )
         )}
       </span>
-      {replying && (
-        <ReplyDialog
+      {dialog && (
+        <ReportDialog
           dispute={dispute}
-          onClose={() => setReplying(false)}
+          readOnly={dialog === "view"}
+          onClose={() => setDialog(null)}
           onDone={() => {
-            setReplying(false);
+            setDialog(null);
             onChanged?.();
           }}
         />

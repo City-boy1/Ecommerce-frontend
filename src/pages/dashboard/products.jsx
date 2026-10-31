@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { axiosPrivate } from "../../api/axios";
 import { useToast } from "../../context/ToastContext";
-import { getImageUrl } from "../../utils/productHelpers";
-import { formatPrice } from "../../utils/format";
+import { getImageUrl, formatPrice } from "../../utils/productHelpers";
 import "../../css/inventory.css";
 
 const TABS = [

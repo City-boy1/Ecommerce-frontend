@@ -107,3 +107,10 @@
 .lm-ao-linkbtn { background: none; border: 0; padding: 0; font: inherit; font-size: 13px; color: var(--ao-bronze); text-decoration: underline; cursor: pointer; }
 .lm-ao-quote--seller { border-left-color: #111; background: #f5f5f5; }
 .lm-ao-quotelabel { display: block; margin-top: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ao-muted); }
+
+.lm-ao-audit { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border, #e5e5e5); }
+.lm-ao-audit:last-child { border-bottom: 0; }
+.lm-ao-audit__reason { margin: 4px 0 0; color: #737373; font-size: 14px; }
+.lm-ao-audit__who { text-align: right; white-space: nowrap; }
+.lm-ao-audit__who small { display: block; color: #737373; }
+.lm-ao-pager { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 16px 0; }

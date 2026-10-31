@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNotify } from "../../hooks/useNotify";
 import { confirmReceived, reportProblem } from "../../services/disputeService";
 import { CONFIRM_WINDOW_DAYS, DISPUTE_STATUS_LABEL, REPORT_REASONS } from "../../utils/disputeLabels";
@@ -7,6 +7,10 @@ import apiMessage from "../../utils/apiMessage";
 import "../../css/adminOversight.css";
 
 const DAY = 24 * 60 * 60 * 1000;
+const MAX_PHOTOS = 3;
+const MAX_BYTES = 5 * 1024 * 1024;
+const OK_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const PHOTO_REQUIRED = ["wrong_item", "damaged"]; // must match the server
 
 function deliveredAt(sub) {
   return sub.deliveredAt || sub.timeline?.find((t) => t.status === "delivered")?.at || null;
@@ -16,9 +20,15 @@ function ReportDialog({ orderId, subOrder, onClose, onDone }) {
   const notify = useNotify();
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState("");
+  const [photos, setPhotos] = useState([]); // File objects
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const boxRef = useRef(null);
+  const fileRef = useRef(null);
+
+  // Preview URLs, released when photos change or the dialog closes
+  const previews = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
+  useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && !busy && onClose();
@@ -27,13 +37,33 @@ function ReportDialog({ orderId, subOrder, onClose, onDone }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [busy, onClose]);
 
+  const photoRequired = PHOTO_REQUIRED.includes(reason);
+
+  const addPhotos = (e) => {
+    const picked = Array.from(e.target.files || []);
+    e.target.value = ""; // lets the same file be chosen again
+    if (!picked.length) return;
+    const next = [...photos];
+    for (const f of picked) {
+      if (!OK_TYPES.includes(f.type)) return setErr("Photos must be PNG, JPG or WebP.");
+      if (f.size > MAX_BYTES) return setErr("Each photo must be 5 MB or smaller.");
+      if (next.length >= MAX_PHOTOS) return setErr(`You can add up to ${MAX_PHOTOS} photos.`);
+      next.push(f);
+    }
+    setErr("");
+    setPhotos(next);
+  };
+
+  const removePhoto = (i) => setPhotos((p) => p.filter((_, idx) => idx !== i));
+
   const submit = async () => {
     if (!reason) return setErr("Choose what went wrong.");
     if (message.trim().length < 10) return setErr("Please tell us a little more (at least 10 characters).");
+    if (photoRequired && photos.length === 0) return setErr("Please add at least one photo as proof.");
     setErr("");
     setBusy(true);
     try {
-      await reportProblem(orderId, { subOrderId: subOrder._id, reason, message: message.trim() });
+      await reportProblem(orderId, { subOrderId: subOrder._id, reason, message: message.trim(), images: photos });
       notify.success("Thanks. We've sent your report to our team.");
       onDone();
     } catch (e) {
@@ -62,6 +92,26 @@ function ReportDialog({ orderId, subOrder, onClose, onDone }) {
           <label htmlFor="lm-rp-msg">Details</label>
           <textarea id="lm-rp-msg" className="lm-input" rows={4} maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} />
         </div>
+
+        <div className="lm-d-field">
+          <label>Photos {photoRequired ? "(required)" : "(optional)"}</label>
+          <div className="lm-ao-photos">
+            {previews.map((src, i) => (
+              <div className="lm-ao-photo" key={src}>
+                <img src={src} alt={`Proof ${i + 1}`} />
+                <button type="button" className="lm-ao-photo__x" onClick={() => removePhoto(i)} disabled={busy} aria-label={`Remove photo ${i + 1}`}>×</button>
+              </div>
+            ))}
+            {photos.length < MAX_PHOTOS && (
+              <button type="button" className="lm-ao-photo lm-ao-photo--add" onClick={() => fileRef.current?.click()} disabled={busy}>
+                + Add
+              </button>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={addPhotos} />
+          <small>Up to {MAX_PHOTOS} photos, PNG, JPG or WebP, 5 MB each.</small>
+        </div>
+
         {err && <div className="lm-err" role="alert">{err}</div>}
 
         <div className="lm-modal__actions">
@@ -75,7 +125,6 @@ function ReportDialog({ orderId, subOrder, onClose, onDone }) {
 
 // Buyer: shown under a sub-order on My orders.
 //   <DeliveryConfirm orderId={order._id} subOrder={sub} onChanged={reload} />
-// Needs on the sub-order: status, timeline or deliveredAt, receivedAt, dispute ({status, adminNote} or null).
 export default function DeliveryConfirm({ orderId, subOrder, onChanged }) {
   const notify = useNotify();
   const [reporting, setReporting] = useState(false);

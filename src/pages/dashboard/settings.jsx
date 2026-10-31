@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { axiosPrivate } from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { getMyDeletionRequest, requestDeletion, cancelDeletionRequest } from "../../services/deletionService";
 import "../../css/settings.css";
 
 const DEFAULT_SETTINGS = {
@@ -88,6 +89,7 @@ export default function Settings() {
   const [deletionReason, setDeletionReason] = useState("");
   const [confirmDeletion, setConfirmDeletion] = useState(false);
   const [requestingDeletion, setRequestingDeletion] = useState(false);
+  const [deletion, setDeletion] = useState(null); // my pending request, if any
 
   useEffect(() => {
     let active = true;
@@ -114,6 +116,18 @@ export default function Settings() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load my pending deletion request (admins can't request one)
+  useEffect(() => {
+    if (isAdmin) return;
+    let active = true;
+    getMyDeletionRequest()
+      .then((d) => active && setDeletion(d.request))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [isAdmin]);
 
   const visibleSections = SECTIONS.filter((s) => s.roles.includes(role));
   const currentId = visibleSections.some((s) => s.id === activeSection)
@@ -190,14 +204,28 @@ export default function Settings() {
 
     setRequestingDeletion(true);
     try {
-      await axiosPrivate.post("/users/me/deletion-request", { reason: deletionReason.trim() });
+      const res = await requestDeletion(deletionReason.trim());
+      setDeletion(res.request);
       setConfirmDeletion(false);
       setDeletionReason("");
-      toast.success("Your account deletion request has been submitted.");
+      toast.success("Your request was sent. An admin will review it.");
     } catch (error) {
       toast.error(
         error?.response?.data?.message || "Couldn't submit your request. Please try again."
       );
+    } finally {
+      setRequestingDeletion(false);
+    }
+  }
+
+  async function cancelDeletion() {
+    setRequestingDeletion(true);
+    try {
+      await cancelDeletionRequest();
+      setDeletion(null);
+      toast.success("Your request was cancelled.");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Couldn't cancel your request. Please try again.");
     } finally {
       setRequestingDeletion(false);
     }
@@ -275,7 +303,7 @@ export default function Settings() {
                         />
                         <Toggle
                           label="Product review updates"
-                          description="When an admin approves or rejects one of your products."
+                          description="When an admin approves one of your products, and when stock runs low."
                           checked={settings.storeNotifications}
                           onChange={(v) => updateSetting("storeNotifications", v)}
                         />
@@ -283,7 +311,7 @@ export default function Settings() {
                     )}
 
                     <p className="settings-muted">
-                      Security alerts, such as password changes, are always on.
+                      Security alerts, such as password changes, and product rejections are always on.
                     </p>
                   </div>
 
@@ -398,42 +426,67 @@ export default function Settings() {
                     <div className="settings-panel settings-danger-panel">
                       <div className="settings-panel-heading">
                         <h3>Request account deletion</h3>
-                        <p>This submits a request. It does not delete your account immediately.</p>
+                        <p>An admin reviews every request. Your account is not deleted immediately.</p>
                       </div>
 
-                      <form onSubmit={requestAccountDeletion}>
-                        <SettingsField
-                          label="Reason (optional)"
-                          hint="Don't include your password or other sensitive details."
-                        >
-                          <textarea
-                            rows={3}
-                            value={deletionReason}
-                            onChange={(e) => setDeletionReason(e.target.value)}
-                            placeholder="Tell us why you want to close your account..."
-                          />
-                        </SettingsField>
+                      {deletion ? (
+                        <>
+                          <p>
+                            Your request was sent on{" "}
+                            {new Date(deletion.createdAt).toLocaleDateString("en-GH", { dateStyle: "medium" })} and is
+                            waiting for review.
+                          </p>
+                          {(deletion.openOrders > 0 || deletion.openDisputes > 0) && (
+                            <p className="settings-muted">
+                              We can only close your account once your open orders ({deletion.openOrders}) and
+                              problem reports ({deletion.openDisputes}) are finished.
+                            </p>
+                          )}
+                          <button
+                            type="button"
+                            className="settings-button settings-button-dark"
+                            onClick={cancelDeletion}
+                            disabled={requestingDeletion}
+                          >
+                            {requestingDeletion ? "Working..." : "Cancel my request"}
+                          </button>
+                        </>
+                      ) : (
+                        <form onSubmit={requestAccountDeletion}>
+                          <SettingsField
+                            label="Reason (optional)"
+                            hint="Don't include your password or other sensitive details."
+                          >
+                            <textarea
+                              rows={3}
+                              maxLength={300}
+                              value={deletionReason}
+                              onChange={(e) => setDeletionReason(e.target.value)}
+                              placeholder="Tell us why you want to close your account..."
+                            />
+                          </SettingsField>
 
-                        <label className="settings-confirm-row">
-                          <input
-                            type="checkbox"
-                            checked={confirmDeletion}
-                            onChange={(e) => setConfirmDeletion(e.target.checked)}
-                          />
-                          <span>
-                            I understand that account deletion may affect my profile, orders,
-                            and access to the marketplace.
-                          </span>
-                        </label>
+                          <label className="settings-confirm-row">
+                            <input
+                              type="checkbox"
+                              checked={confirmDeletion}
+                              onChange={(e) => setConfirmDeletion(e.target.checked)}
+                            />
+                            <span>
+                              I understand that closing my account removes my personal details and signs me out
+                              everywhere. I can't undo it once approved.
+                            </span>
+                          </label>
 
-                        <button
-                          type="submit"
-                          className="settings-button settings-button-danger"
-                          disabled={requestingDeletion}
-                        >
-                          {requestingDeletion ? "Submitting request..." : "Request account deletion"}
-                        </button>
-                      </form>
+                          <button
+                            type="submit"
+                            className="settings-button settings-button-danger"
+                            disabled={requestingDeletion}
+                          >
+                            {requestingDeletion ? "Submitting request..." : "Request account deletion"}
+                          </button>
+                        </form>
+                      )}
                     </div>
                   )}
                 </>

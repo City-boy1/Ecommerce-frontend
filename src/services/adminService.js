@@ -44,3 +44,22 @@ export async function resolveDispute(id, { status, adminNote }) {
   const { data } = await axiosPrivate.patch(`/admin/disputes/${id}`, { status, adminNote });
   return data;
 }
+
+/* ---------- Audit log ---------- */
+
+export async function getAuditLog(params) {
+  const { data } = await axiosPrivate.get("/admin/audit", { params: clean(params) });
+  return data; // { entries, total, pages }
+}
+
+/* ---------- Account deletion requests ---------- */
+
+export async function getDeletionRequests(params) {
+  const { data } = await axiosPrivate.get("/admin/deletion-requests", { params: clean(params) });
+  return data; // { requests, total, pages }
+}
+
+export async function resolveDeletionRequest(id, { action, adminNote }) {
+  const { data } = await axiosPrivate.patch(`/admin/deletion-requests/${id}`, { action, adminNote });
+  return data;
+}

@@ -481,7 +481,6 @@ export default function Navbar() {
             )
           )}
 
-          {/* The About page doesn't exist yet: this link shows "not found" until it does. */}
           <Link
             to="/about"
             className="mobile-menu-link"

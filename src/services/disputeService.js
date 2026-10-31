@@ -8,9 +8,16 @@ export async function confirmReceived(orderId, subOrderId) {
 }
 
 // reason: "wrong_item" | "damaged" | "not_received" | "other"
-// Images are not sent yet; the contract allows them later.
-export async function reportProblem(orderId, { subOrderId, reason, message }) {
-  const { data } = await axiosPrivate.post(`/orders/${orderId}/report`, { subOrderId, reason, message });
+// images: array of File objects (0 to 3)
+export async function reportProblem(orderId, { subOrderId, reason, message, images = [] }) {
+  const form = new FormData();
+  form.append("subOrderId", subOrderId);
+  form.append("reason", reason);
+  form.append("message", message);
+  images.forEach((file) => form.append("images", file));
+  const { data } = await axiosPrivate.post(`/orders/${orderId}/report`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return data;
 }
 

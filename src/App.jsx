@@ -11,7 +11,13 @@ import Shop from "./pages/shop";
 import StorePublic from "./pages/store";
 import OrderConfirmation from "./pages/orderConfirmation";
 import BecomeSeller from "./pages/becomeSeller";
+import ForgotPassword from "./pages/forgotPassword";
+import ResetPassword from "./pages/resetPassword";
 import NotFound from "./pages/notfound";
+import About from "./pages/about";
+import Terms from "./pages/terms";
+import Privacy from "./pages/privacy";
+import OrderDetail from "./pages/orderDetail";
 
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -29,6 +35,8 @@ import Profile from "./pages/dashboard/profile";
 import Categories from "./pages/dashboard/categories";
 import Sellers from "./pages/dashboard/sellers";
 import Disputes from "./pages/dashboard/disputes";
+import Deletions from "./pages/dashboard/deletions";
+import AuditLog from "./pages/dashboard/auditLog";
 
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
@@ -60,11 +68,17 @@ export default function App() {
                   <Route path="/stores/:id" element={<StorePublic />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/wishlist" element={<Wishlist />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
 
                   {/* Logged in */}
                   <Route element={<ProtectedRoute />}>
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/orders/:id/confirmation" element={<OrderConfirmation />} />
+                    <Route path="/orders/:id" element={<OrderDetail />} />
                     <Route path="/become-seller" element={<BecomeSeller />} />
                   </Route>
 
@@ -149,6 +163,22 @@ export default function App() {
                       element={
                         <ProtectedRoute allowedRoles={["admin"]}>
                           <Disputes />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="audit"
+                      element={
+                        <ProtectedRoute allowedRoles={["admin"]}>
+                          <AuditLog />
+                        </ProtectedRoute>
+                      }
+                    />
+                                        <Route
+                      path="deletions"
+                      element={
+                        <ProtectedRoute allowedRoles={["admin"]}>
+                          <Deletions />
                         </ProtectedRoute>
                       }
                     />

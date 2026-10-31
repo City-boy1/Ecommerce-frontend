@@ -11,6 +11,13 @@ import "../../css/dashboardUi.css";
 
 const MAX_LOGO = 2 * 1024 * 1024;
 
+// Must match the server (controllers/storeController.js and POST /sellers/apply)
+const NAME_MIN = 3;
+const NAME_MAX = 60;
+const ADDRESS_MIN = 5;
+const ADDRESS_MAX = 200;
+const DESCRIPTION_MAX = 500;
+
 export default function StorePage() {
   const { store, loading, error, reload, setStore, percent } = useMyStore();
   const notify = useNotify();
@@ -39,9 +46,13 @@ export default function StorePage() {
 
   const validate = () => {
     const e = {};
-    if (form.name.trim().length < 2) e.name = "Store name must be at least 2 characters.";
-    if (form.name.trim().length > 80) e.name = "Store name can be at most 80 characters.";
-    if (form.description.length > 500) e.description = "Description can be at most 500 characters.";
+    const name = form.name.trim();
+    const address = form.address.trim();
+    if (name.length < NAME_MIN) e.name = `Store name must be at least ${NAME_MIN} characters.`;
+    else if (name.length > NAME_MAX) e.name = `Store name can be at most ${NAME_MAX} characters.`;
+    if (address.length < ADDRESS_MIN) e.address = `Add your town or area (at least ${ADDRESS_MIN} characters).`;
+    else if (address.length > ADDRESS_MAX) e.address = `Address can be at most ${ADDRESS_MAX} characters.`;
+    if (form.description.length > DESCRIPTION_MAX) e.description = `Description can be at most ${DESCRIPTION_MAX} characters.`;
     setErrors((x) => ({ logo: x.logo, ...e }));
     return Object.keys(e).length === 0;
   };
@@ -100,21 +111,23 @@ export default function StorePage() {
 
             <div className={`lm-d-field ${errors.name ? "has-error" : ""}`}>
               <label htmlFor="name">Store name</label>
-              <input id="name" className="lm-input" value={form.name} onChange={set("name")} maxLength={80} />
+              <input id="name" className="lm-input" value={form.name} onChange={set("name")} maxLength={NAME_MAX} />
+              <div className="lm-hint"><span>{NAME_MIN} to {NAME_MAX} characters</span><span>{form.name.length}/{NAME_MAX}</span></div>
               {errors.name && <div className="lm-err" role="alert">{errors.name}</div>}
             </div>
 
             <div className={`lm-d-field ${errors.description ? "has-error" : ""}`}>
-              <label htmlFor="description">Description</label>
-              <textarea id="description" className="lm-input" rows={4} value={form.description} onChange={set("description")} maxLength={500} placeholder="What do you sell? What makes your store special?" />
-              <div className="lm-hint"><span>Shown on your store page</span><span>{form.description.length}/500</span></div>
+              <label htmlFor="description">Description (optional)</label>
+              <textarea id="description" className="lm-input" rows={4} value={form.description} onChange={set("description")} maxLength={DESCRIPTION_MAX} placeholder="What do you sell? What makes your store special?" />
+              <div className="lm-hint"><span>Shown on your store page</span><span>{form.description.length}/{DESCRIPTION_MAX}</span></div>
               {errors.description && <div className="lm-err" role="alert">{errors.description}</div>}
             </div>
 
-            <div className="lm-d-field">
+            <div className={`lm-d-field ${errors.address ? "has-error" : ""}`}>
               <label htmlFor="address">Address / location</label>
-              <input id="address" className="lm-input" value={form.address} onChange={set("address")} placeholder="e.g. Osu, Accra" />
+              <input id="address" className="lm-input" value={form.address} onChange={set("address")} maxLength={ADDRESS_MAX} placeholder="e.g. Osu, Accra" />
               <div className="lm-hint"><span>Helps buyers know where items ship from</span></div>
+              {errors.address && <div className="lm-err" role="alert">{errors.address}</div>}
             </div>
 
             <div><button type="submit" className="lm-btn" disabled={saving}>{saving ? "Saving…" : "Save store"}</button></div>

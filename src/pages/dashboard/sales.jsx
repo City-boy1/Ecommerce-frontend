@@ -8,6 +8,9 @@ import { nextStatus, canCancel, SELLER_ACTION_LABEL, STATUS_LABEL } from "../../
 import { formatDate, timeAgo } from "../../utils/dateHelpers";
 import { formatPrice, getImageUrl } from "../../utils/productHelpers";
 import DisputeBadge from "../../components/dashboard/DisputeBadge";
+import { cancelAsSeller, respondToCancelRequest } from "../../services/orderActions";
+import CancelDialog from "../../components/dashboard/CancelDialog";
+import { SELLER_REASONS } from "../../utils/cancelReasons";
 import "../../css/tokens.css";
 import "../../css/shop.css";
 import "../../css/dashboardUi.css";
@@ -22,6 +25,39 @@ export default function Sales() {
   const [tab, setTab] = useState("placed");
   const [pending, setPending] = useState({});
   const [declining, setDeclining] = useState(null);
+
+    const [refusing, setRefusing] = useState(null);
+
+  const sellerCancel = async ({ reasonCode, note }) => {
+    const order = declining;
+    if (!order || pending[order._id]) return;
+    setPending((p) => ({ ...p, [order._id]: true }));
+    try {
+      await cancelAsSeller(order._id, { reasonCode, note });
+      notify.success("Order cancelled. Stock was returned.");
+      setDeclining(null);
+      reload();
+    } catch (e) {
+      notify.error(e?.response?.data?.message || "We couldn't cancel that order. Please try again.");
+    } finally {
+      setPending((p) => ({ ...p, [order._id]: false }));
+    }
+  };
+
+  const answerRequest = async (order, action, note) => {
+    if (pending[order._id]) return;
+    setPending((p) => ({ ...p, [order._id]: true }));
+    try {
+      await respondToCancelRequest(order._id, { action, note });
+      notify.success(action === "approve" ? "Order cancelled. Stock was returned." : "Request refused. The buyer was told why.");
+      setRefusing(null);
+      reload();
+    } catch (e) {
+      notify.error(e?.response?.data?.message || "We couldn't answer that request. Please try again.");
+    } finally {
+      setPending((p) => ({ ...p, [order._id]: false }));
+    }
+  };
 
   const [params] = useSearchParams();
 const focusId = params.get("sub");
@@ -121,16 +157,28 @@ useEffect(() => {
                   {[addr.line1, addr.city, addr.region].filter(Boolean).join(", ")}
                   {addr.notes && <><br /><em>Note: {addr.notes}</em></>}
                 </div>
+                                {o.cancelRequest?.status === "pending" && (
+                  <div className="lm-ao-confirm lm-ao-confirm--open">
+                    <div>
+                      The buyer asked to cancel: {o.cancelRequest.reason}
+                      <small>Answer by {formatDate(o.cancelRequest.autoApproveAt)}, or it is approved automatically.</small>
+                    </div>
+                    <div className="lm-ao-confirm__btns">
+                      <button className="lm-btn lm-btn--sm" disabled={!!pending[o._id]} onClick={() => answerRequest(o, "approve")}>Approve</button>
+                      <button className="lm-btn lm-btn--ghost lm-btn--sm" disabled={!!pending[o._id]} onClick={() => setRefusing(o)}>Refuse</button>
+                    </div>
+                  </div>
+                )}
                 {(next || canCancel(o.status)) && (
                   <div className="lm-sub__actions">
-                    {next && (
+                    {next && o.cancelRequest?.status !== "pending" && (
                       <button className="lm-btn lm-btn--sm" disabled={!!pending[o._id]} onClick={() => move(o, next)}>
                         {pending[o._id] ? "Updating…" : SELLER_ACTION_LABEL[next]}
                       </button>
                     )}
                     {canCancel(o.status) && (
                       <button className="lm-btn lm-btn--ghost lm-btn--sm" disabled={!!pending[o._id]} onClick={() => setDeclining(o)}>
-                        Decline order
+                        {o.status === "placed" ? "Decline order" : "Cancel order"}
                       </button>
                     )}
                   </div>
@@ -141,17 +189,29 @@ useEffect(() => {
         })}
       </div>
 
-      <ConfirmDialog
+            <CancelDialog
         open={!!declining}
-        title="Decline this order?"
-        message="The buyer is told and the items return to your stock. They can't be sent after this."
-        confirmLabel="Decline order"
-        cancelLabel="Keep order"
+        title={declining?.status === "confirmed" ? "Cancel this confirmed order?" : "Decline this order?"}
+        message="The buyer is told and the items return to your stock."
+        warning={declining?.status === "confirmed" ? "You already confirmed this order, so cancelling it counts against your cancel rate." : ""}
+        reasons={SELLER_REASONS}
+        confirmLabel={declining?.status === "confirmed" ? "Cancel order" : "Decline order"}
+        busy={declining ? !!pending[declining._id] : false}
+        onConfirm={sellerCancel}
+        onClose={() => setDeclining(null)}
+      />
+
+      <ConfirmDialog
+        open={!!refusing}
+        title="Refuse this cancellation request?"
+        message="Tell the buyer why you can't cancel. The order stays confirmed and you need to ship it."
+        confirmLabel="Refuse request"
+        cancelLabel="Back"
         danger
         askReason
-        busy={declining ? !!pending[declining._id] : false}
-        onConfirm={(reason) => move(declining, "cancelled", reason)}
-        onClose={() => setDeclining(null)}
+        busy={refusing ? !!pending[refusing._id] : false}
+        onConfirm={(note) => answerRequest(refusing, "refuse", note)}
+        onClose={() => setRefusing(null)}
       />
     </div>
   );
