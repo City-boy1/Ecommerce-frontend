@@ -9,7 +9,7 @@ import { formatDate, timeAgo } from "../../utils/dateHelpers";
 import { formatPrice, getImageUrl } from "../../utils/productHelpers";
 import DisputeBadge from "../../components/dashboard/DisputeBadge";
 import { cancelAsSeller, respondToCancelRequest } from "../../services/orderActions";
-import CancelDialog from "../../components/dashboard/CancelDialog";
+import CancelDialog from "../../components/dashboard/cancelDialog";
 import { SELLER_REASONS } from "../../utils/cancelReasons";
 import "../../css/tokens.css";
 import "../../css/shop.css";

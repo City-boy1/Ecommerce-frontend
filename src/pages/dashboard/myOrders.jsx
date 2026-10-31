@@ -5,7 +5,7 @@ import { useNotify } from "../../hooks/useNotify";
 import { getMyOrders } from "../../services/dashboardService";
 import { cancelOrder } from "../../services/orderActions";
 import { PageHeader, Tabs, StatusBadge, OrderTimeline, EmptyState, RowSkeleton, ErrorState } from "../../components/dashboard/ui";
-import CancelDialog from "../../components/dashboard/CancelDialog";
+import CancelDialog from "../../components/dashboard/cancelDialog";
 import { BUYER_REASONS } from "../../utils/cancelReasons";
 import { deriveOrderStatus, isLiveOrder } from "../../utils/orderStatus";
 import { formatDate } from "../../utils/dateHelpers";
