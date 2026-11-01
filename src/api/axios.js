@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASEURL = "http://localhost:3000/api";
+const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN || "http://localhost:3000").replace(/\/+$/, "");
+const BASEURL = `${API_ORIGIN}/api`;
 
 export const axiosPublic = axios.create({ baseURL: BASEURL, withCredentials: true });
 export default axiosPublic
